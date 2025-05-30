@@ -620,6 +620,17 @@ class JITFunction(KernelInterface[T]):
                 kernel = kernel.result()
             # launch kernel
             launch_metadata = kernel.launch_metadata(grid, stream, *bound_args.values())
+
+            print("grid_size:", grid_size)
+            print("grid_0:", grid_0)
+            print("grid_1:", grid_1)
+            print("grid_2:", grid_2)
+            print("stream:", stream)
+            print("kernel.function:", kernel.function)
+            print("kernel.packed_metadata:", kernel.packed_metadata)
+            print("launch_metadata:", launch_metadata)
+            print("bound_args:", bound_args)
+
             kernel.run(grid_0, grid_1, grid_2, stream, kernel.function, kernel.packed_metadata, launch_metadata,
                        knobs.runtime.launch_enter_hook, knobs.runtime.launch_exit_hook, *bound_args.values())
         return kernel
@@ -781,6 +792,16 @@ class JITFunction(KernelInterface[T]):
         else:
             kernel = self.compile(src, target=target, options=options.__dict__)
             kernel_cache[key] = kernel
+
+            print(kernel.asm['ttir'])
+            print("key:", key)
+            print("signature:", signature)
+            print("device:", device)
+            print("constexprs:", constexprs)
+            print("options:", options)
+            print("attrs:", attrs)
+            print("warmup:", warmup)
+
             self._call_hook(knobs.runtime.jit_post_compile_hook, key, signature, device, constexprs, options, [attrs],
                             warmup)
         return kernel
