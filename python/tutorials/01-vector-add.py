@@ -241,7 +241,7 @@ def benchmark(size, provider):
     x = torch.rand(size, device=DEVICE, dtype=torch.float32)
     y = torch.rand(size, device=DEVICE, dtype=torch.float32)
 
-    if DEVICE == 'cpu':
+    if DEVICE.type == 'cpu':
         triton.runtime.driver.set_active_to_cpu()
     else:
         triton.runtime.driver.set_active_to_gpu()

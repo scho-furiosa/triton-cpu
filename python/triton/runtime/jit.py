@@ -613,7 +613,15 @@ class JITFunction(KernelInterface[T]):
             # compile the kernel
             src = self.ASTSource(self, signature, constexprs, attrs)
             kernel = self.compile(src, target=target, options=options.__dict__)
+            print(kernel.asm['ttir'])
             kernel_cache[key] = kernel
+            print("key:", key)
+            print("signature:", signature)
+            print("device:", device)
+            print("constexprs:", constexprs)
+            print("options:", options)
+            print("attrs:", attrs)
+            print("warmup:", warmup)
             self._call_hook(key, signature, device, constexprs, options, [attrs], warmup, before=False)
 
         # Check that used global values have not changed.
@@ -634,6 +642,16 @@ class JITFunction(KernelInterface[T]):
             grid_2 = grid[2] if grid_size > 2 else 1
             # launch kernel
             launch_metadata = kernel.launch_metadata(grid, stream, *bound_args.values())
+            print("grid_size:", grid_size)
+            print("grid_0:", grid_0)
+            print("grid_1:", grid_1)
+            print("grid_2:", grid_2)
+            print("stream:", stream)
+            print("kernel.function:", kernel.function)
+            print("kernel.packed_metadata:", kernel.packed_metadata)
+            print("launch_metadata:", launch_metadata)
+            print("bound_args:", bound_args)
+            exit(0)
             kernel.run(grid_0, grid_1, grid_2, stream, kernel.function, kernel.packed_metadata,
                        launch_metadata, self.CompiledKernel.launch_enter_hook, self.CompiledKernel.launch_exit_hook,
                        *bound_args.values())
