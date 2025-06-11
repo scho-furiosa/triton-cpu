@@ -155,7 +155,7 @@ import triton
 import triton.language as tl
 import os
 
-DTYPE = getattr(torch, (os.getenv("DTYPE", "float32")))
+DTYPE = getattr(torch, (os.getenv("DTYPE", "bfloat16")))
 # Choose block size depending on dtype. We have more register
 # capacity for bfloat16/float16 compared to float32.
 BLOCK_SIZE_M = 8 if DTYPE == torch.float32 else 32
@@ -260,7 +260,7 @@ def matmul_kernel(
             b_tile_ptr += BLOCK_SIZE_K * stride_bk
 
     # Convert the accumulator to the output matrix C's type if needed.
-    c = accumulator
+    c = accumulator.to(tl.bfloat16)
 
     # -----------------------------------------------------------
     # Write back the block of the output matrix C.
@@ -306,7 +306,7 @@ def matmul_preprocess_input(a: torch.Tensor, b: torch.Tensor, c: torch.Tensor, n
         K % BLOCK_SIZE_K == 0), "Masking currently not supported, Matrix dimensions must be multiples of block size"
     if c is None:
         # Allocates output.
-        c = torch.empty((M, N), device=a.device, dtype=torch.float32)
+        c = torch.empty((M, N), device=a.device, dtype=torch.bfloat16)
     else:
         assert c.shape == (M, N), "Incompatible dimensions"
 
@@ -346,7 +346,7 @@ triton.runtime.driver.set_active_to_cpu()
 a = torch.randn((512, 512), device='cpu', dtype=DTYPE)
 b = torch.randn((512, 512), device='cpu', dtype=DTYPE)
 c = None
-torch_output = torch.matmul(a.to(torch.float32), b.to(torch.float32))
+torch_output = torch.matmul(a.to(torch.bfloat16), b.to(torch.bfloat16))
 if PREPACKED:
     a, b, c = matmul_preprocess_input(a, b, c)
 triton_output = matmul(a, b, c, 512, 512, 512)
@@ -426,7 +426,7 @@ def benchmark(M, N, K, provider):
 
     if device == 'cpu':
         if 'triton-cpu' in provider:
-            c = torch.zeros((M, N), device=a.device, dtype=torch.float32)
+            c = torch.zeros((M, N), device=a.device, dtype=torch.bfloat16)
         else:
             c = torch.zeros((M, N), device=a.device, dtype=a.dtype)
         triton.runtime.driver.set_active_to_cpu()
